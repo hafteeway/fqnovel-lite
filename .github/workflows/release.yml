@@ -56,7 +56,7 @@ jobs:
       matrix:
         include:
           - arch: x64
-            runner: macos-13
+            runner: macos-15-intel
             command: dist:mac:x64
             java-distribution: temurin
           - arch: arm64
