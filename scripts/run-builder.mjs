@@ -8,7 +8,13 @@ const executable = path.join(
   '.bin',
   process.platform === 'win32' ? 'electron-builder.cmd' : 'electron-builder'
 );
-const child = spawn(executable, process.argv.slice(2), {
+const requestedArgs = process.argv.slice(2);
+const hasPublishMode = requestedArgs.some(
+  (argument) => argument === '--publish' || argument.startsWith('--publish=')
+);
+const builderArgs = hasPublishMode ? requestedArgs : [...requestedArgs, '--publish', 'never'];
+
+const child = spawn(executable, builderArgs, {
   cwd: projectRoot,
   env: process.env,
   stdio: 'inherit',
