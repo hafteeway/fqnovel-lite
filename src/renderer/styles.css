@@ -1,0 +1,253 @@
+:root {
+  font-family: "Segoe UI Variable", "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  color-scheme: light dark;
+  font-synthesis: none;
+}
+
+* { box-sizing: border-box; }
+html, body, #root, .app-provider { width: 100%; height: 100%; margin: 0; overflow: hidden; }
+button, input { font: inherit; }
+
+html,
+body,
+#root,
+.app-provider {
+  background: #f3f3f3;
+}
+
+@media (prefers-color-scheme: dark) {
+  html,
+  body,
+  #root,
+  .app-provider {
+    background: #202020;
+  }
+}
+
+/* Dialogs are mounted in a Fluent portal next to #root. Its theme provider
+   must remain transparent; the dialog surface supplies its own background. */
+body > .fui-FluentProvider {
+  background-color: transparent !important;
+}
+
+/* Notifications are rendered inside the application instead of a Fluent
+   portal. They are visual feedback only and can never intercept operations. */
+.app-notification {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  z-index: 1000;
+  display: grid;
+  width: max-content;
+  max-width: min(380px, calc(100vw - 36px));
+  grid-template-columns: 9px minmax(0, 1fr);
+  align-items: center;
+  gap: 11px;
+  padding: 13px 16px;
+  border: 1px solid var(--colorNeutralStroke2);
+  border-radius: 7px;
+  color: var(--colorNeutralForeground1);
+  background: var(--colorNeutralBackground1);
+  box-shadow: var(--shadow16);
+  pointer-events: none !important;
+  user-select: none;
+  animation: app-notification-enter 160ms ease-out;
+}
+
+.app-notification > span:last-child {
+  overflow-wrap: anywhere;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 20px;
+}
+
+.app-notification-indicator {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #0f6cbd;
+}
+
+.app-notification.success .app-notification-indicator { background: #107c10; }
+.app-notification.error .app-notification-indicator { background: #d13438; }
+
+@keyframes app-notification-enter {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.app-shell {
+  --app-bg: #f3f3f3;
+  --sidebar-bg: #f7f7f7;
+  --surface: #fff;
+  --surface-subtle: #fafafa;
+  --border: #e2e2e2;
+  --border-strong: #d4d4d4;
+  --text-secondary: #616161;
+  --nav-hover: #e9e9e9;
+  --nav-active: #e4e4e4;
+  display: grid;
+  grid-template-columns: 216px minmax(0, 1fr);
+  width: 100%;
+  height: 100%;
+  color: #242424;
+  background: var(--app-bg);
+}
+
+@media (prefers-color-scheme: dark) {
+  .app-shell {
+    --app-bg: #202020;
+    --sidebar-bg: #252525;
+    --surface: #2b2b2b;
+    --surface-subtle: #303030;
+    --border: #3d3d3d;
+    --border-strong: #4b4b4b;
+    --text-secondary: #b3b3b3;
+    --nav-hover: #333;
+    --nav-active: #3a3a3a;
+    color: #fff;
+  }
+}
+
+.sidebar {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  padding: 12px 8px 10px;
+  border-right: 1px solid var(--border);
+  background: var(--sidebar-bg);
+}
+
+.brand { display: flex; align-items: center; min-height: 54px; gap: 11px; padding: 4px 10px 14px; }
+.brand-icon {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  place-items: center;
+  border-radius: 7px;
+  color: #fff;
+  background: #0f6cbd;
+}
+.brand-copy { min-width: 0; }
+.brand-copy strong, .brand-copy span { display: block; }
+.brand-copy strong { font-size: 14px; line-height: 20px; }
+.brand-copy span { color: var(--text-secondary); font-size: 11px; line-height: 16px; }
+.navigation { display: grid; gap: 2px; }
+
+.nav-button {
+  position: relative;
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr) auto;
+  width: 100%;
+  height: 42px;
+  align-items: center;
+  gap: 10px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 5px;
+  color: inherit;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+}
+.nav-button:hover { background: var(--nav-hover); }
+.nav-button.active { background: var(--nav-active); }
+.nav-button.active::before {
+  position: absolute;
+  top: 10px;
+  bottom: 10px;
+  left: 0;
+  width: 3px;
+  border-radius: 3px;
+  background: #0f6cbd;
+  content: "";
+}
+.nav-button svg { width: 20px; height: 20px; }
+.nav-button span { overflow: hidden; font-size: 14px; text-overflow: ellipsis; white-space: nowrap; }
+.nav-count {
+  min-width: 20px;
+  padding: 1px 6px;
+  border-radius: 10px;
+  color: var(--text-secondary);
+  background: var(--surface);
+  font-size: 11px !important;
+  text-align: center;
+}
+
+.sidebar-footer {
+  display: grid;
+  gap: 8px;
+  margin-top: auto;
+  padding: 12px 8px 4px;
+  border-top: 1px solid var(--border);
+}
+.sidebar-status-row {
+  display: grid;
+  grid-template-columns: 8px minmax(0, 1fr) auto;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+}
+.sidebar-status-name,
+.sidebar-status-value {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sidebar-status-name {
+  color: var(--text-secondary);
+  font-size: 11px;
+}
+.sidebar-status-value {
+  font-size: 11px;
+  font-weight: 600;
+}
+.health-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  flex: 0 0 7px;
+  border-radius: 50%;
+  background: #8a8886;
+}
+.health-dot.ready { background: #107c10; box-shadow: 0 0 0 2px rgba(16, 124, 16, .14); }
+.health-dot.busy { background: #f9a825; box-shadow: 0 0 0 2px rgba(249, 168, 37, .16); }
+.health-dot.error { background: #d13438; box-shadow: 0 0 0 2px rgba(209, 52, 56, .14); }
+.health-dot.idle { background: #8a8886; }
+
+.workspace {
+  display: grid;
+  min-width: 0;
+  min-height: 0;
+  grid-template-rows: 64px minmax(0, 1fr);
+}
+.topbar {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 0 24px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+.topbar h1, .list-header h2, .setting-card h2 { margin: 0; }
+.topbar > div { display: grid; min-width: 0; gap: 1px; }
+.view-description { overflow: hidden; color: var(--text-secondary); text-overflow: ellipsis; white-space: nowrap; }
+.content {
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+  padding: 20px 24px 24px;
+  background: var(--app-bg);
+}
+.view-stack { display: grid; width: min(1080px, 100%); gap: 14px; }
+.command-surface, .list-surface, .metric-strip, .setting-card, .log-surface {
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: var(--surface);
+}
+
+.command-surface { display: flex; align-items: center; gap: 10px; padding: 12px; }
+.search-command > span:first-child { min-width: 220px; flex: 1; }

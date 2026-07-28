@@ -1,0 +1,35 @@
+@media (max-width: 880px) {
+  .app-shell { grid-template-columns: 66px minmax(0, 1fr); }
+  .brand { justify-content: center; padding-inline: 0; }
+  .brand-copy,
+  .nav-button > span:not(.nav-count),
+  .sidebar-status-name,
+  .sidebar-status-value { display: none; }
+  .nav-button { display: grid; grid-template-columns: 1fr; justify-items: center; padding: 0; }
+  .nav-count { position: absolute; top: 3px; right: 3px; }
+  .sidebar-footer { grid-template-columns: 1fr; justify-items: center; }
+  .sidebar-status-row { grid-template-columns: 1fr; justify-items: center; }
+  .settings-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 700px) {
+  .content { padding: 14px; }
+  .topbar { padding: 0 14px; }
+  .view-description { display: none; }
+  .command-surface { align-items: stretch; flex-direction: column; }
+  .metric-strip { grid-template-columns: repeat(3, 1fr); }
+  .metric-strip > button { grid-column: 1 / -1; margin-top: 8px; }
+  .metric { padding-inline: 8px; }
+  .data-row, .download-row { grid-template-columns: 38px minmax(0, 1fr); }
+  .search-result-list { padding: 8px; }
+  .search-result-row { grid-template-columns: 60px minmax(0, 1fr); padding: 11px; }
+  .book-cover-frame { width: 60px; height: 84px; }
+  .data-row > .fui-Badge,
+  .data-row > .fui-Button,
+  .data-row > .row-actions,
+  .download-row > .progress-value,
+  .download-row > .row-actions {
+    grid-column: 2;
+    justify-self: start;
+  }
+}

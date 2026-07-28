@@ -1,0 +1,76 @@
+# Node.js dependencies and package-manager caches
+node_modules/
+.npm/
+.npm-cache/
+.pnpm-store/
+.yarn/
+.yarn-cache/
+
+# Application and Java build outputs
+dist/
+release/
+out/
+coverage/
+.nyc_output/
+*.tsbuildinfo
+java-worker/target/
+dependency-reduced-pom.xml
+
+# Downloaded runtimes and archives
+vendor/jre/
+vendor/.downloads/
+
+# Runtime data and temporary files
+data/
+.electron-smoke/
+.cache/
+.tmp/
+tmp/
+temp/
+*.pid
+*.pid.lock
+
+# Logs and crash reports
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+hs_err_pid*
+replay_pid*
+
+# Local configuration, credentials and signing files
+.env
+.env.*
+!.env.example
+*.p12
+*.pfx
+*.jks
+*.keystore
+*.pem
+*.key
+
+# IDE and editor files
+.idea/
+.vscode/
+*.iml
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*~
+*.swp
+*.swo
+
+# Local tool metadata
+.github/modernize/
+.codex/
+.agents/
+
+# Operating-system files
+.DS_Store
+._*
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/

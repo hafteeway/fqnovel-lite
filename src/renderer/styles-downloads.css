@@ -1,0 +1,264 @@
+.pagination-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.search-result-row {
+  grid-template-columns: 72px minmax(0, 1fr) auto;
+}
+
+.download-dialog-surface {
+  width: min(620px, calc(100vw - 32px));
+  max-width: 620px;
+  border: 1px solid var(--colorNeutralStroke2);
+  border-radius: 12px;
+  box-shadow: var(--shadow64);
+}
+
+.download-dialog-body {
+  row-gap: 0;
+}
+
+.download-dialog-title {
+  display: grid;
+  min-width: 0;
+  gap: 3px;
+  padding-bottom: 4px;
+}
+
+.download-dialog-title > span {
+  color: var(--colorNeutralForeground3);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 18px;
+}
+
+.download-dialog-title > strong {
+  overflow: hidden;
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 28px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.download-dialog-content {
+  display: grid;
+  gap: 20px;
+  padding-block: 14px 6px;
+}
+
+.download-dialog-summary {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 8px;
+  background: var(--colorNeutralBackground2);
+}
+
+.download-summary-icon,
+.format-option-icon {
+  display: grid;
+  place-items: center;
+  color: var(--colorBrandForeground1);
+  background: var(--colorBrandBackground2);
+}
+
+.download-summary-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+}
+
+.download-dialog-summary > div {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+}
+
+.download-dialog-summary strong {
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 20px;
+}
+
+.download-dialog-summary span:last-child {
+  overflow: hidden;
+  color: var(--colorNeutralForeground3);
+  font-size: 12px;
+  line-height: 18px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.format-section {
+  display: grid;
+  gap: 8px;
+}
+
+.format-options-label {
+  color: var(--colorNeutralForeground2);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 18px;
+}
+
+.format-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.format-options button {
+  display: grid;
+  min-width: 0;
+  min-height: 92px;
+  grid-template-columns: 36px minmax(0, 1fr) 20px;
+  align-items: center;
+  gap: 11px;
+  padding: 14px;
+  border: 1px solid var(--colorNeutralStroke1);
+  border-radius: 8px;
+  color: var(--colorNeutralForeground1);
+  background: var(--colorNeutralBackground1);
+  cursor: pointer;
+  text-align: left;
+  transition: border-color .12s ease, background-color .12s ease, box-shadow .12s ease;
+}
+
+.format-options button:hover {
+  border-color: var(--colorBrandStroke1);
+  background: var(--colorNeutralBackground1Hover);
+}
+
+.format-options button.active {
+  border-color: var(--colorBrandStroke1);
+  background: var(--colorBrandBackground2);
+  box-shadow: inset 0 0 0 1px var(--colorBrandStroke1);
+}
+
+.format-options button:focus-visible {
+  outline: 2px solid var(--colorStrokeFocus2);
+  outline-offset: 2px;
+}
+
+.format-option-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 7px;
+}
+
+.format-option-copy {
+  display: grid;
+  min-width: 0;
+  gap: 3px;
+}
+
+.format-option-copy strong {
+  font-size: 15px;
+  line-height: 20px;
+}
+
+.format-option-copy > span {
+  overflow: hidden;
+  color: var(--colorNeutralForeground3);
+  font-size: 12px;
+  line-height: 18px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.format-option-check {
+  display: grid;
+  width: 20px;
+  height: 20px;
+  place-items: center;
+  color: var(--colorBrandForeground1);
+}
+
+.download-dialog-actions {
+  gap: 8px;
+  padding-top: 18px;
+  border-top: 1px solid var(--colorNeutralStroke2);
+}
+
+.download-dialog-actions > button:last-child {
+  min-width: 142px;
+}
+
+.path-value {
+  overflow: hidden;
+  padding: 9px 11px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: inherit;
+  background: var(--surface-subtle);
+  font: 12px/20px Consolas, "SFMono-Regular", monospace;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
+.task-error {
+  color: #c50f1f;
+  font-size: 11px;
+}
+
+.download-row {
+  grid-template-columns: 40px minmax(0, 1fr) 48px minmax(120px, auto);
+}
+
+.download-row .row-actions {
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 700px) {
+  .list-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .pagination-actions {
+    width: 100%;
+  }
+
+  .pagination-actions > button {
+    flex: 1;
+  }
+
+  .download-dialog-surface {
+    width: min(520px, calc(100vw - 24px));
+  }
+
+  .format-options {
+    grid-template-columns: 1fr;
+  }
+
+  .format-options button {
+    min-height: 78px;
+  }
+
+  .download-dialog-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .download-dialog-actions > button {
+    width: 100%;
+  }
+
+  .search-result-row,
+  .download-row {
+    grid-template-columns: 60px minmax(0, 1fr);
+  }
+
+  .search-result-row > .fui-Button,
+  .download-row > .progress-value,
+  .download-row > .row-actions {
+    grid-column: 2;
+    justify-self: start;
+  }
+}

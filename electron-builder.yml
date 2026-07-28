@@ -1,0 +1,61 @@
+appId: com.fqnovel.desktop
+productName: FQNovel Desktop
+copyright: Copyright © 2026 FQNovel Desktop
+asar: true
+npmRebuild: false
+directories:
+  output: release
+files:
+  - src/**/*
+  - dist/renderer/**/*
+  - package.json
+extraMetadata:
+  main: src/main.mjs
+win:
+  icon: build/icon.png
+  executableName: FQNovel Desktop
+  target:
+    - target: nsis
+      arch:
+        - x64
+    - target: portable
+      arch:
+        - x64
+  artifactName: ${productName}-${version}-${arch}-setup.${ext}
+  extraResources:
+    - from: java-worker/target/unidbg-worker.jar
+      to: unidbg/unidbg-worker.jar
+    - from: vendor/jre/win/${arch}
+      to: jre
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: FQNovel Desktop
+  uninstallDisplayName: FQNovel Desktop
+  deleteAppDataOnUninstall: false
+portable:
+  artifactName: ${productName}-${version}-${arch}-portable.${ext}
+mac:
+  icon: build/icon.png
+  category: public.app-category.utilities
+  target:
+    - target: dmg
+      arch:
+        - x64
+        - arm64
+    - target: zip
+      arch:
+        - x64
+        - arm64
+  artifactName: ${productName}-${version}-${arch}.${ext}
+  hardenedRuntime: true
+  gatekeeperAssess: false
+  extraResources:
+    - from: java-worker/target/unidbg-worker.jar
+      to: unidbg/unidbg-worker.jar
+    - from: vendor/jre/mac/${arch}
+      to: jre
+dmg:
+  title: FQNovel Desktop ${version}
