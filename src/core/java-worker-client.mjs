@@ -7,10 +7,13 @@ import path from 'node:path';
 
 const STARTUP_TIMEOUT_MS = 30_000;
 const REQUEST_TIMEOUT_MS = 10_000;
+const DEFAULT_THREAD_STACK_SIZE = process.platform === 'darwin' && process.arch === 'arm64'
+  ? '-Xss1m'
+  : '-Xss512k';
 const DEFAULT_JAVA_OPTIONS = [
   '-Xms16m',
   '-Xmx128m',
-  '-Xss512k',
+  DEFAULT_THREAD_STACK_SIZE,
   '-XX:+UseSerialGC',
   '-XX:MaxMetaspaceSize=96m',
   '-XX:ReservedCodeCacheSize=32m'
