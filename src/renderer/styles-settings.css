@@ -103,6 +103,52 @@
   color: var(--text-secondary);
   text-align: center;
 }
+.about-card { grid-column: 1 / -1; }
+.about-metadata {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0;
+}
+.about-metadata > div {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 14px;
+  min-height: 38px;
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  background: var(--surface-subtle);
+}
+.about-metadata dt,
+.about-metadata dd {
+  overflow: hidden;
+  margin: 0;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.about-metadata dt { color: var(--text-secondary); }
+.about-metadata dd { text-align: right; }
+.about-copy-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.about-copy {
+  display: grid;
+  align-content: start;
+  gap: 6px;
+  padding: 12px;
+  border-radius: 5px;
+  background: var(--surface-subtle);
+}
+.about-copy h3 { margin: 0; }
+.about-copy > span {
+  color: var(--text-secondary);
+  line-height: 1.7;
+}
 .log-surface { overflow: hidden; }
 .logs {
   height: 230px;

@@ -7,6 +7,8 @@
   .sidebar-status-value { display: none; }
   .nav-button { display: grid; grid-template-columns: 1fr; justify-items: center; padding: 0; }
   .nav-count { position: absolute; top: 3px; right: 3px; }
+  .about-metadata,
+  .about-copy-grid { grid-template-columns: 1fr; }
   .sidebar-footer { grid-template-columns: 1fr; justify-items: center; }
   .sidebar-status-row { grid-template-columns: 1fr; justify-items: center; }
   .settings-grid { grid-template-columns: 1fr; }

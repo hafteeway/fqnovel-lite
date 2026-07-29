@@ -787,6 +787,45 @@ function SettingsView({
             {workerStatus.tone === 'busy' ? `${workerStatus.label}…` : '切换模拟设备'}
           </Button>
         </div>
+
+        <div className="setting-card about-card">
+          <div className="setting-card-title">
+            <div className="service-icon"><DocumentText24Regular /></div>
+            <div>
+              <Text as="h2" size={400} weight="semibold">关于 FQNovel Desktop</Text>
+              <Text size={200}>作者、项目致谢与免责声明</Text>
+            </div>
+          </div>
+
+          <dl className="about-metadata">
+            <div>
+              <dt>作者</dt>
+              <dd>leey668</dd>
+            </div>
+            <div>
+              <dt>项目来源</dt>
+              <dd>zero199901/fqnovel-unidbg</dd>
+            </div>
+          </dl>
+
+          <div className="about-copy-grid">
+            <section className="about-copy">
+              <Text as="h3" size={300} weight="semibold">致谢</Text>
+              <Text size={200}>
+                本项目基于 zero199901/fqnovel-unidbg 进行桌面客户端方向的重构与扩展。
+                感谢原项目作者及相关开源项目贡献者的研究、实现与分享。本项目并非原项目的官方版本。
+              </Text>
+            </section>
+            <section className="about-copy">
+              <Text as="h3" size={300} weight="semibold">免责声明</Text>
+              <Text size={200}>
+                本项目全部代码由 AI 生成和修改，不保证可用性、准确性、安全性或稳定性，仅供个人学习、
+                技术研究和交流使用。使用者应遵守法律法规、平台协议及版权要求，并自行承担全部使用风险。
+                不得用于商业、违法或侵犯第三方合法权益的用途。
+              </Text>
+            </section>
+          </div>
+        </div>
       </section>
 
       <section className="log-surface">
