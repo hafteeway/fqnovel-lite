@@ -23,6 +23,7 @@ vendor/.downloads/
 # Runtime data and temporary files
 data/
 .electron-smoke/
+native-macos/.runtime-data/
 .cache/
 .tmp/
 tmp/
@@ -66,6 +67,12 @@ replay_pid*
 .github/modernize/
 .codex/
 .agents/
+AGENTS.md
+development-log/
+docs/
+native-macos/.runtime-data/
+native-macos/FQNovelLite.xcodeproj/xcuserdata/
+native-macos/FQNovelLite.xcodeproj/project.xcworkspace/xcuserdata/
 
 # Operating-system files
 .DS_Store

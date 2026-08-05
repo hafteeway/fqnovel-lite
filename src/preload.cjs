@@ -2,8 +2,6 @@ const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('fqnovel', {
   getStatus: () => ipcRenderer.invoke('runtime:get-status'),
-  refreshUnidbg: () => ipcRenderer.invoke('runtime:refresh-unidbg'),
-  setBookSourceEnabled: (enabled) => ipcRenderer.invoke('settings:set-book-source-enabled', enabled),
   getCoverImage: (url) => ipcRenderer.invoke('images:get-cover', url),
   searchBooks: (request) => ipcRenderer.invoke('books:search', request),
   createDownload: (bookId, options) => ipcRenderer.invoke('downloads:create', bookId, options),

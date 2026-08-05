@@ -1,7 +1,6 @@
 import { EventEmitter } from 'node:events';
 import path from 'node:path';
 import { JavaWorkerClient } from './java-worker-client.mjs';
-import { BookSourceServer } from './book-source-server.mjs';
 import { FqNovelApiClient } from './fq-novel-api-client.mjs';
 import { FileCacheStore } from './file-cache-store.mjs';
 import { SettingsStore } from './settings-store.mjs';
@@ -60,17 +59,6 @@ export class AppRuntime extends EventEmitter {
       repository: this.repository,
       exporter: this.exports
     });
-    this.server = options.server || new BookSourceServer({
-      ...options.serverOptions,
-      workerStatus: () => this.worker.status(),
-      apiStatus: () => this.api.status(),
-      api: this.api,
-      management: {
-        listDownloads: () => this.listDownloads(),
-        createDownload: (bookId, downloadOptions) => this.createDownload(bookId, downloadOptions),
-        controlDownload: (taskId, action) => this.controlDownload(taskId, action)
-      }
-    });
     this.refreshPromise = null;
     this.refreshing = false;
     this.stopPromise = null;
@@ -80,7 +68,6 @@ export class AppRuntime extends EventEmitter {
     this.worker.on('log', (line) => this.#log('java', line));
     this.worker.on('status', () => this.#emitStatus());
     this.worker.on('worker-error', (error) => this.#log('error', error.message));
-    this.server.on('status', () => this.#emitStatus());
     this.downloads.on('status', (task) => {
       if (task) this.#log('download', `${task.bookName || task.bookId}：${task.status} ${task.progress}%`);
       this.#emitStatus();
@@ -89,9 +76,6 @@ export class AppRuntime extends EventEmitter {
 
   async start() {
     await this.worker.start();
-    if (this.settings.get().bookSourceEnabled) {
-      await this.server.start();
-    }
     this.#emitStatus();
     return this.status();
   }
@@ -101,7 +85,6 @@ export class AppRuntime extends EventEmitter {
     this.stopping = true;
     this.stopPromise = (async () => {
       await this.downloads.stop();
-      await this.server.stop();
       await this.worker.stop();
       this.repository.close();
     })();
@@ -114,6 +97,8 @@ export class AppRuntime extends EventEmitter {
 
   searchBooks(request) {
     const normalized = typeof request === 'string' ? { query: request } : (request || {});
+    this.settings.recordSearch(normalized.query);
+    this.#emitStatus();
     return this.api.searchBooks({
       query: normalized.query,
       tabType: 3,
@@ -144,6 +129,10 @@ export class AppRuntime extends EventEmitter {
     return this.downloads.delete(taskId);
   }
 
+  deleteCompletedDownloads() {
+    return this.downloads.clearCompleted();
+  }
+
   getSettings() {
     return this.settings.get();
   }
@@ -156,18 +145,17 @@ export class AppRuntime extends EventEmitter {
     return this.getSettings();
   }
 
-  async setBookSourceEnabled(enabled) {
-    const nextEnabled = Boolean(enabled);
-    if (nextEnabled) {
-      await this.server.start({ emitStatus: false });
-    } else {
-      await this.server.stop({ emitStatus: false });
-    }
-    this.settings.setBookSourceEnabled(nextEnabled);
-    const status = this.server.status();
-    this.#log('system', nextEnabled ? `书源服务已开启：${status.baseUrl}` : '书源服务已关闭');
+  setExportFormat(format) {
+    const settings = this.settings.setExportFormat(format);
+    this.#log('system', `默认导出格式已更改：${settings.exportFormat.toUpperCase()}`);
     this.#emitStatus();
     return this.getSettings();
+  }
+
+  clearSearchHistory() {
+    const settings = this.settings.clearSearchHistory();
+    this.#emitStatus();
+    return settings;
   }
 
   async refreshUnidbg() {
@@ -184,7 +172,6 @@ export class AppRuntime extends EventEmitter {
   }
 
   async #performRefresh() {
-    this.server.setMaintenance(true);
     this.#log('system', '开始刷新 unidbg 模拟环境');
     try {
       const workerStatus = await this.worker.refresh();
@@ -200,7 +187,6 @@ export class AppRuntime extends EventEmitter {
       );
       return { ...workerStatus, device: deviceStatus };
     } finally {
-      this.server.setMaintenance(false);
       this.#emitStatus();
     }
   }
@@ -210,7 +196,6 @@ export class AppRuntime extends EventEmitter {
       worker: this.worker.status(),
       device: this.deviceProfiles.status(),
       api: this.api.status(),
-      server: this.server.status(),
       downloads: this.downloads.status(),
       settings: this.settings.get(),
       refreshing: this.refreshing,

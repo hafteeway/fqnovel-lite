@@ -3,7 +3,6 @@ import ReactDOM from 'react-dom/client';
 import { App } from './App';
 import './styles.css';
 import './styles-components.css';
-import './styles-settings.css';
 import './styles-responsive.css';
 import './styles-downloads.css';
 

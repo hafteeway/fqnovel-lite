@@ -7,7 +7,8 @@ export class SettingsStore {
     this.settingsPath = path.join(this.dataDir, 'settings.json');
     this.defaults = {
       exportDirectory: path.join(this.dataDir, 'exports'),
-      bookSourceEnabled: false
+      exportFormat: 'epub',
+      searchHistory: []
     };
     this.settings = this.#read();
     mkdirSync(this.settings.exportDirectory, { recursive: true });
@@ -26,8 +27,25 @@ export class SettingsStore {
     return this.get();
   }
 
-  setBookSourceEnabled(enabled) {
-    this.settings.bookSourceEnabled = Boolean(enabled);
+  setExportFormat(format) {
+    this.settings.exportFormat = normalizeFormat(format);
+    this.#flush();
+    return this.get();
+  }
+
+  recordSearch(query) {
+    const normalized = String(query || '').trim();
+    if (!normalized) return this.get();
+    this.settings.searchHistory = [
+      normalized,
+      ...this.settings.searchHistory.filter((item) => item !== normalized)
+    ].slice(0, 20);
+    this.#flush();
+    return this.get();
+  }
+
+  clearSearchHistory() {
+    this.settings.searchHistory = [];
     this.#flush();
     return this.get();
   }
@@ -35,7 +53,14 @@ export class SettingsStore {
   #read() {
     try {
       const saved = JSON.parse(readFileSync(this.settingsPath, 'utf8'));
-      return { ...this.defaults, ...saved };
+      return {
+        ...this.defaults,
+        exportDirectory: typeof saved?.exportDirectory === 'string'
+          ? saved.exportDirectory
+          : this.defaults.exportDirectory,
+        exportFormat: normalizeFormat(saved?.exportFormat),
+        searchHistory: normalizeSearchHistory(saved?.searchHistory)
+      };
     } catch {
       return { ...this.defaults };
     }
@@ -47,4 +72,15 @@ export class SettingsStore {
     writeFileSync(temporary, `${JSON.stringify(this.settings, null, 2)}\n`, 'utf8');
     renameSync(temporary, this.settingsPath);
   }
+}
+
+function normalizeFormat(value) {
+  const format = String(value || 'epub').toLowerCase();
+  if (!['txt', 'epub'].includes(format)) return 'epub';
+  return format;
+}
+
+function normalizeSearchHistory(value) {
+  if (!Array.isArray(value)) return [];
+  return [...new Set(value.map((item) => String(item || '').trim()).filter(Boolean))].slice(0, 20);
 }

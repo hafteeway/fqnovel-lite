@@ -38,8 +38,7 @@ const runtime = new AppRuntime({
     cwd: runtimeRoot,
     javaBin: app.isPackaged ? bundledJava : undefined,
     jarPath: app.isPackaged ? bundledWorker : undefined
-  },
-  serverOptions: { host: '0.0.0.0', port: smokeTest ? 0 : 9999 }
+  }
 });
 const coverImages = new CoverImageService({
   maxEntries: 32,
@@ -69,13 +68,16 @@ function createWindow() {
 }
 
 function publishStatus() {
-  if (!mainWindow?.isDestroyed()) mainWindow.webContents.send('runtime:status', runtime.status());
+  if (!mainWindow?.isDestroyed()) mainWindow.webContents.send('runtime:status', presentationStatus());
+}
+
+function presentationStatus() {
+  const { downloads, settings } = runtime.status();
+  return { downloads, settings };
 }
 
 app.whenReady().then(async () => {
-  ipcMain.handle('runtime:get-status', () => runtime.status());
-  ipcMain.handle('runtime:refresh-unidbg', () => runtime.refreshUnidbg());
-  ipcMain.handle('settings:set-book-source-enabled', (_event, enabled) => runtime.setBookSourceEnabled(enabled));
+  ipcMain.handle('runtime:get-status', () => presentationStatus());
   ipcMain.handle('images:get-cover', async (_event, url) => {
     try {
       return await coverImages.getDataUrl(url);
@@ -108,11 +110,9 @@ app.whenReady().then(async () => {
   });
 
   runtime.on('status', publishStatus);
-  runtime.on('log', publishStatus);
   createWindow();
   try {
     await runtime.start();
-    if (smokeTest) await runtime.setBookSourceEnabled(true);
   } catch (error) {
     runtime.log('error', error.message);
   }
@@ -124,9 +124,10 @@ app.whenReady().then(async () => {
     }
     await new Promise((resolve) => setTimeout(resolve, 500));
     const renderer = await mainWindow.webContents.executeJavaScript(`({
-      bookSourceUrl: document.querySelector('#bookSourceUrl')?.textContent
+      title: document.querySelector('h1')?.textContent,
+      bridge: Object.keys(window.fqnovel).sort()
     })`);
-    const smokeResult = { smoke: 'ok', packaged: app.isPackaged, renderer, status: runtime.status() };
+    const smokeResult = { smoke: 'ok', packaged: app.isPackaged, renderer };
     console.log(JSON.stringify(smokeResult));
     if (process.env.FQNOVEL_SMOKE_RESULT) {
       await writeFile(

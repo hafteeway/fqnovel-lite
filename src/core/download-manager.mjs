@@ -103,6 +103,15 @@ export class DownloadManager extends EventEmitter {
     };
   }
 
+  clearCompleted() {
+    const completedTasks = this.list().filter((task) => task.status === 'completed');
+    const results = completedTasks.map((task) => this.delete(task.id));
+    return {
+      deletedCount: results.filter((result) => result.deleted).length,
+      taskIds: results.map((result) => result.taskId)
+    };
+  }
+
   async stop() {
     this.stopping = true;
     for (const taskId of this.running.keys()) {

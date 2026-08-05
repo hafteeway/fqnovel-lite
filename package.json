@@ -15,10 +15,8 @@
     "renderer:watch": "vite build --watch",
     "typecheck": "tsc --noEmit",
     "start": "npm run build:renderer && electron .",
-    "start:core": "node src/core-cli.mjs",
     "test": "node --test test/*.test.mjs",
     "smoke:worker": "node scripts/worker-smoke.mjs",
-    "smoke:api": "node scripts/api-smoke.mjs",
     "smoke:runtime": "node scripts/runtime-smoke.mjs",
     "runtime:win:x64": "node scripts/prepare-jre.mjs win x64",
     "runtime:mac:x64": "node scripts/prepare-jre.mjs mac x64",
@@ -29,7 +27,6 @@
     "dist:mac:arm64": "npm run build:renderer && npm run build:worker && npm run runtime:mac:arm64 && node scripts/run-builder.mjs --mac dmg zip --arm64"
   },
   "devDependencies": {
-    "@types/qrcode": "^1.5.6",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.4",
@@ -42,7 +39,6 @@
     "@fluentui/react-components": "^9.74.4",
     "@fluentui/react-icons": "2.0.316",
     "heic-convert": "^2.1.0",
-    "qrcode": "^1.5.4",
     "react": "^19.2.8",
     "react-dom": "^19.2.8"
   }

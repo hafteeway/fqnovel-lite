@@ -11,7 +11,6 @@ import {
   Input,
   ProgressBar,
   Spinner,
-  Switch,
   Text,
   webDarkTheme,
   webLightTheme
@@ -20,23 +19,18 @@ import {
   ArrowDownload24Regular,
   ArrowLeft24Regular,
   ArrowRight24Regular,
-  ArrowSync24Regular,
   Book24Filled,
   BookOpen24Regular,
   CheckmarkCircle20Filled,
-  Copy24Regular,
   Dismiss24Regular,
   DocumentText24Regular,
   FolderOpen24Regular,
   Pause24Regular,
   Play24Regular,
-  PlugConnected24Regular,
-  QrCode24Regular,
   Search24Regular,
-  Settings24Regular,
+  Settings24Regular
 } from '@fluentui/react-icons';
 import { type FormEvent, type ReactNode, useCallback, useEffect, useRef, useState } from 'react';
-import QRCode from 'qrcode';
 import type {
   AppSettings,
   Book,
@@ -46,7 +40,6 @@ import type {
   SearchResponse,
   ViewId
 } from './types';
-import { deriveRuntimePresentation } from './status-model';
 
 const navigation: Array<{ id: ViewId; label: string; icon: ReactNode }> = [
   { id: 'search', label: '搜索', icon: <Search24Regular /> },
@@ -57,7 +50,7 @@ const navigation: Array<{ id: ViewId; label: string; icon: ReactNode }> = [
 const viewTitles: Record<ViewId, { title: string; description: string }> = {
   search: { title: '搜索小说', description: '找到书籍后直接下载为 TXT 或 EPUB' },
   downloads: { title: '下载任务', description: '查看全书下载、生成文件和失败重试进度' },
-  settings: { title: '设置', description: '书源服务、导出目录、模拟环境和运行日志' }
+  settings: { title: '设置', description: '管理下载文件的保存位置' }
 };
 
 type NoticeIntent = 'success' | 'error' | 'info';
@@ -121,11 +114,34 @@ export function App() {
     };
   }, [notify]);
 
-  const runtime = deriveRuntimePresentation(status);
+  useEffect(() => {
+    const handleShortcut = (event: KeyboardEvent) => {
+      if (!event.metaKey) return;
+      if (event.key.toLowerCase() === 'f') {
+        event.preventDefault();
+        setActiveView('search');
+        window.dispatchEvent(new Event('fqnovel:focus-search'));
+      }
+      if (event.key === ',') {
+        event.preventDefault();
+        void chooseExportDirectory();
+      }
+    };
+    window.addEventListener('keydown', handleShortcut);
+    return () => window.removeEventListener('keydown', handleShortcut);
+  }, []);
+
   const tasks = status.downloads?.tasks || [];
-  const bookSourceUrl = status.server?.baseUrl
-    ? `${status.server.baseUrl}/book-source/fqnovel.json`
-    : '开启书源服务后显示';
+
+  async function chooseExportDirectory() {
+    try {
+      const nextSettings = await window.fqnovel.chooseExportDirectory();
+      setSettings(nextSettings);
+      notify('默认导出目录已更新', 'success');
+    } catch (error) {
+      notify(errorMessage(error, '导出目录设置失败'), 'error');
+    }
+  }
 
   return (
     <FluentProvider theme={darkMode ? webDarkTheme : webLightTheme} className="app-provider">
@@ -157,24 +173,6 @@ export function App() {
             ))}
           </nav>
 
-          <div className="sidebar-footer" aria-label="服务状态">
-            <div
-              className="sidebar-status-row"
-              aria-label={`模拟环境：${runtime.worker.label}`}
-            >
-              <div className={`health-dot ${runtime.worker.tone}`} />
-              <span className="sidebar-status-name">模拟环境</span>
-              <strong className="sidebar-status-value">{runtime.worker.label}</strong>
-            </div>
-            <div
-              className="sidebar-status-row"
-              aria-label={`书源服务：${runtime.source.label}`}
-            >
-              <div className={`health-dot ${runtime.source.tone}`} />
-              <span className="sidebar-status-name">书源服务</span>
-              <strong className="sidebar-status-value">{runtime.source.label}</strong>
-            </div>
-          </div>
         </aside>
 
         <section className="workspace">
@@ -185,6 +183,13 @@ export function App() {
                 {viewTitles[activeView].description}
               </Text>
             </div>
+            <Button
+              icon={<FolderOpen24Regular />}
+              onClick={() => void chooseExportDirectory()}
+              title={settings.exportDirectory || '选择默认导出目录'}
+            >
+              导出目录
+            </Button>
           </header>
 
           <main className="content">
@@ -203,20 +208,14 @@ export function App() {
             )}
             {activeView === 'settings' && (
               <SettingsView
-                status={status}
                 settings={settings}
-                setSettings={setSettings}
-                bookSourceUrl={bookSourceUrl}
-                notify={notify}
+                onChooseDirectory={chooseExportDirectory}
               />
             )}
           </main>
         </section>
       </div>
 
-      <div className="smoke-probes" aria-hidden="true">
-        <span id="bookSourceUrl">{bookSourceUrl}</span>
-      </div>
       {notice && (
         <div
           key={notice.id}
@@ -251,6 +250,13 @@ function SearchView({
   const [selectedBook, setSelectedBook] = useState<Book | null>(null);
   const [format, setFormat] = useState<ExportFormat>('txt');
   const [creatingTask, setCreatingTask] = useState(false);
+  const searchInput = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const focusSearch = () => searchInput.current?.focus();
+    window.addEventListener('fqnovel:focus-search', focusSearch);
+    return () => window.removeEventListener('fqnovel:focus-search', focusSearch);
+  }, []);
 
   async function requestPage(nextPage: number, nextQuery = activeQuery, searchId = response.searchId) {
     if (!nextQuery) return;
@@ -301,6 +307,7 @@ function SearchView({
     <div className="view-stack">
       <form className="command-surface search-command" onSubmit={handleSearch}>
         <Input
+          ref={searchInput}
           size="large"
           value={query}
           contentBefore={<Search24Regular />}
@@ -618,286 +625,28 @@ function DownloadsView({ tasks, notify }: NotifyProps & { tasks: DownloadTask[] 
 }
 
 function SettingsView({
-  status,
   settings,
-  setSettings,
-  bookSourceUrl,
-  notify
-}: NotifyProps & {
-  status: RuntimeStatus;
+  onChooseDirectory
+}: {
   settings: AppSettings;
-  setSettings: (settings: AppSettings) => void;
-  bookSourceUrl: string;
+  onChooseDirectory: () => Promise<void>;
 }) {
-  const [refreshDialogOpen, setRefreshDialogOpen] = useState(false);
-  const [qrDialogOpen, setQrDialogOpen] = useState(false);
-  const [qrDataUrl, setQrDataUrl] = useState('');
-  const [sourceChanging, setSourceChanging] = useState(false);
-  const [busy, setBusy] = useState<'refresh' | 'directory' | null>(null);
-  const runtime = deriveRuntimePresentation(status);
-  const workerStatus = runtime.worker;
-  const sourceStatus = runtime.source;
-  const workerReady = workerStatus.tone === 'ready';
-  const sourceEnabled = Boolean(settings.bookSourceEnabled);
-  const sourceAvailable = sourceEnabled
-    && status.server?.state === 'running'
-    && bookSourceUrl.startsWith('http');
-
-  async function toggleBookSource(enabled: boolean) {
-    setSourceChanging(true);
-    try {
-      const nextSettings = await window.fqnovel.setBookSourceEnabled(enabled);
-      setSettings(nextSettings);
-      notify(enabled ? '书源服务已开启' : '书源服务已关闭', 'success');
-    } catch (error) {
-      notify(errorMessage(error, enabled ? '书源服务启动失败' : '书源服务关闭失败'), 'error');
-    } finally {
-      setSourceChanging(false);
-    }
-  }
-
-  async function copyBookSourceUrl() {
-    if (!sourceAvailable) return;
-    try {
-      await navigator.clipboard.writeText(bookSourceUrl);
-      notify('书源地址已复制', 'success');
-    } catch (error) {
-      notify(errorMessage(error, '书源地址复制失败'), 'error');
-    }
-  }
-
-  async function showBookSourceQrCode() {
-    if (!sourceAvailable) return;
-    try {
-      const dataUrl = await QRCode.toDataURL(bookSourceUrl, {
-        width: 280,
-        margin: 2,
-        errorCorrectionLevel: 'M',
-        color: { dark: '#111111', light: '#ffffff' }
-      });
-      setQrDataUrl(dataUrl);
-      setQrDialogOpen(true);
-    } catch (error) {
-      notify(errorMessage(error, '二维码生成失败'), 'error');
-    }
-  }
-
-  async function refreshWorker() {
-    setBusy('refresh');
-    try {
-      await window.fqnovel.refreshUnidbg();
-      setRefreshDialogOpen(false);
-      notify('已切换到新的模拟设备', 'success');
-    } catch (error) {
-      notify(errorMessage(error, '刷新失败'), 'error');
-    } finally {
-      setBusy(null);
-    }
-  }
-
-  async function chooseDirectory() {
-    setBusy('directory');
-    try {
-      const nextSettings = await window.fqnovel.chooseExportDirectory();
-      setSettings(nextSettings);
-    } catch (error) {
-      notify(errorMessage(error, '导出目录设置失败'), 'error');
-    } finally {
-      setBusy(null);
-    }
-  }
-
   return (
-    <div className="view-stack">
-      <section className="settings-grid">
-        <div className="setting-card book-source-card">
-          <div className="book-source-card-header">
-            <div className="setting-card-title">
-              <div className={`service-icon ${sourceStatus.tone}`}>
-                <PlugConnected24Regular />
-              </div>
-              <div>
-                <Text as="h2" size={400} weight="semibold">书源服务</Text>
-                <Text size={200}>{sourceStatus.label}</Text>
-              </div>
-            </div>
-            <Switch
-              checked={sourceEnabled}
-              disabled={sourceChanging}
-              aria-label="开启或关闭书源服务"
-              onChange={(_event, data) => void toggleBookSource(data.checked)}
-            />
-          </div>
-          <Text size={200}>开启后，本机和同一局域网内的设备均可访问。</Text>
-          {sourceEnabled && (
-            <div className="source-address-row">
-              <button
-                type="button"
-                className="source-address-copy"
-                disabled={!sourceAvailable}
-                title={sourceAvailable ? '点击复制书源地址' : '书源服务正在启动'}
-                onClick={() => void copyBookSourceUrl()}
-              >
-                <code>{bookSourceUrl}</code>
-                <Copy24Regular />
-              </button>
-              <Button
-                appearance="secondary"
-                icon={<QrCode24Regular />}
-                disabled={!sourceAvailable}
-                aria-label="显示书源地址二维码"
-                onClick={() => void showBookSourceQrCode()}
-              />
-            </div>
-          )}
+    <section className="settings-surface" aria-label="下载设置">
+      <div className="settings-heading">
+        <div className="settings-icon"><FolderOpen24Regular /></div>
+        <div>
+          <Text as="h2" size={400} weight="semibold">下载位置</Text>
+          <Text size={200}>TXT 和 EPUB 完成后保存在这里</Text>
         </div>
-
-        <div className="setting-card">
-          <div className="setting-card-title">
-            <div className="service-icon"><FolderOpen24Regular /></div>
-            <div>
-              <Text as="h2" size={400} weight="semibold">默认导出目录</Text>
-              <Text size={200}>TXT 和 EPUB 完成后保存在这里</Text>
-            </div>
-          </div>
-          <code className="path-value">{settings.exportDirectory || '正在读取…'}</code>
-          <Button
-            icon={<FolderOpen24Regular />}
-            disabled={busy === 'directory'}
-            onClick={() => void chooseDirectory()}
-          >
-            选择目录
-          </Button>
-        </div>
-
-        <div className="setting-card">
-          <div className="setting-card-title">
-            <div className={`service-icon ${workerStatus.tone}`}><ArrowSync24Regular /></div>
-            <div>
-              <Text as="h2" size={400} weight="semibold">模拟环境</Text>
-              <Text size={200}>{workerStatus.label}</Text>
-            </div>
-          </div>
-          <Text size={200}>刷新会生成新的设备信息并重建 unidbg 模拟环境。</Text>
-          <Button
-            icon={<ArrowSync24Regular />}
-            disabled={!workerReady || status.refreshing}
-            onClick={() => setRefreshDialogOpen(true)}
-          >
-            {workerStatus.tone === 'busy' ? `${workerStatus.label}…` : '切换模拟设备'}
-          </Button>
-        </div>
-
-        <div className="setting-card about-card">
-          <div className="setting-card-title">
-            <div className="service-icon"><DocumentText24Regular /></div>
-            <div>
-              <Text as="h2" size={400} weight="semibold">关于 FQNovel Desktop</Text>
-              <Text size={200}>作者、项目致谢与免责声明</Text>
-            </div>
-          </div>
-
-          <dl className="about-metadata">
-            <div>
-              <dt>作者</dt>
-              <dd>leey668</dd>
-            </div>
-            <div>
-              <dt>项目来源</dt>
-              <dd>zero199901/fqnovel-unidbg</dd>
-            </div>
-          </dl>
-
-          <div className="about-copy-grid">
-            <section className="about-copy">
-              <Text as="h3" size={300} weight="semibold">致谢</Text>
-              <Text size={200}>
-                本项目基于 zero199901/fqnovel-unidbg 进行桌面客户端方向的重构与扩展。
-                感谢原项目作者及相关开源项目贡献者的研究、实现与分享。本项目并非原项目的官方版本。
-              </Text>
-            </section>
-            <section className="about-copy">
-              <Text as="h3" size={300} weight="semibold">免责声明</Text>
-              <Text size={200}>
-                本项目全部代码由 AI 生成和修改，不保证可用性、准确性、安全性或稳定性，仅供个人学习、
-                技术研究和交流使用。使用者应遵守法律法规、平台协议及版权要求，并自行承担全部使用风险。
-                不得用于商业、违法或侵犯第三方合法权益的用途。
-              </Text>
-            </section>
-          </div>
-        </div>
-      </section>
-
-      <section className="log-surface">
-        <div className="list-header">
-          <div>
-            <Text as="h2" size={400} weight="semibold">运行日志</Text>
-            <Text size={200}>用于查看模拟环境、书源和下载状态</Text>
-          </div>
-          <Badge appearance="tint">{status.logs?.length || 0} 条</Badge>
-        </div>
-        <div className="logs">
-          {status.logs?.length
-            ? status.logs.map((item, index) => (
-              <p key={`${item.at}-${index}`}>
-                <time>{new Date(item.at).toLocaleTimeString()}</time>
-                <span>{item.source ? `[${item.source}] ` : ''}{item.message}</span>
-              </p>
-            ))
-            : <p className="empty-log">暂无运行日志</p>}
-        </div>
-      </section>
-
-      <Dialog
-        open={qrDialogOpen}
-        surfaceMotion={null}
-        onOpenChange={(_event, data) => setQrDialogOpen(data.open)}
-      >
-        <DialogSurface backdrop={null}>
-          <DialogBody>
-            <DialogTitle>书源地址二维码</DialogTitle>
-            <DialogContent>
-              <div className="qr-dialog-content">
-                {qrDataUrl && <img src={qrDataUrl} alt="书源地址二维码" />}
-                <button
-                  type="button"
-                  className="qr-address-copy"
-                  onClick={() => void copyBookSourceUrl()}
-                >
-                  <code>{bookSourceUrl}</code>
-                  <Copy24Regular />
-                </button>
-                <Text size={200}>使用同一局域网内的阅读设备扫描添加。</Text>
-              </div>
-            </DialogContent>
-            <DialogActions>
-              <Button appearance="primary" onClick={() => setQrDialogOpen(false)}>完成</Button>
-            </DialogActions>
-          </DialogBody>
-        </DialogSurface>
-      </Dialog>
-
-      <Dialog
-        open={refreshDialogOpen}
-        surfaceMotion={null}
-        onOpenChange={(_event, data) => setRefreshDialogOpen(data.open)}
-      >
-        <DialogSurface backdrop={null}>
-          <DialogBody>
-            <DialogTitle>切换模拟设备？</DialogTitle>
-            <DialogContent>
-              将生成一套新的设备信息并重建 unidbg。刷新期间书源服务会短暂进入维护状态。
-            </DialogContent>
-            <DialogActions>
-              <Button appearance="secondary" onClick={() => setRefreshDialogOpen(false)}>取消</Button>
-              <Button appearance="primary" disabled={busy === 'refresh'} onClick={() => void refreshWorker()}>
-                开始刷新
-              </Button>
-            </DialogActions>
-          </DialogBody>
-        </DialogSurface>
-      </Dialog>
-    </div>
+      </div>
+      <code className="settings-path">{settings.exportDirectory || '正在读取默认目录…'}</code>
+      <div className="settings-actions">
+        <Button appearance="primary" icon={<FolderOpen24Regular />} onClick={() => void onChooseDirectory()}>
+          选择下载目录
+        </Button>
+      </div>
+    </section>
   );
 }
 

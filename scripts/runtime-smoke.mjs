@@ -7,57 +7,40 @@ const cwd = new URL('..', import.meta.url).pathname.replace(/^\/([A-Z]:)/, '$1')
 const dataDir = await mkdtemp(path.join(os.tmpdir(), 'fqnovel-runtime-smoke-'));
 const runtime = new AppRuntime({
   dataDir,
-  workerOptions: { cwd },
-  serverOptions: { host: '127.0.0.1', port: 0 }
+  workerOptions: { cwd }
 });
 runtime.on('log', ({ source, message }) => process.stderr.write(`[${source}] ${message}\n`));
 
 try {
   await runtime.start();
-  await runtime.setBookSourceEnabled(true);
-  const status = runtime.status();
-  const baseUrl = status.server.baseUrl;
-  const health = await fetch(`${baseUrl}/api/v1/health`).then((response) => response.json());
-  const source = await fetch(`${baseUrl}/book-source/fqnovel.json`).then((response) => response.json());
-  const search = await fetch(
-    `${baseUrl}/api/fqsearch/books?query=${encodeURIComponent(process.argv[2] || '剑来')}&tabType=3&count=5`
-  ).then((response) => response.json());
-  const firstBook = search.data?.books?.[0] || null;
+  const search = await runtime.searchBooks({ query: process.argv[2] || '剑来', count: 5 });
+  const firstBook = search.books?.[0] || null;
   let directory = null;
   if (firstBook?.bookId) {
-    directory = await fetch(`${baseUrl}/api/fqsearch/directory/${firstBook.bookId}`)
-      .then((response) => response.json());
+    directory = await runtime.api.getDirectory(firstBook.bookId);
   }
-  const firstChapter = directory?.data?.item_data_list?.[0] || null;
+  const firstChapter = directory?.item_data_list?.[0] || null;
   let chapter = null;
   if (firstBook?.bookId && firstChapter?.item_id) {
-    chapter = await fetch(
-      `${baseUrl}/api/fqnovel/chapter/${firstBook.bookId}/${firstChapter.item_id}`
-    ).then((response) => response.json());
+    chapter = await runtime.api.getChapter(firstBook.bookId, firstChapter.item_id);
   }
-  if (firstChapter && !chapter?.data) process.exitCode = 1;
+  if (firstChapter && !chapter) process.exitCode = 1;
   console.log(JSON.stringify({
-    health: health.status,
-    worker: health.worker?.state,
-    bookSourceUrl: source[0]?.bookSourceUrl,
-    books: search.data?.books?.length ?? 0,
+    worker: runtime.status().worker.state,
+    books: search.books?.length ?? 0,
     firstBook: firstBook ? {
       bookId: firstBook.bookId,
       bookName: firstBook.bookName,
       author: firstBook.author
     } : null,
-    chapters: directory?.data?.item_data_list?.length ?? null,
-    chapter: chapter?.data ? {
-      chapterId: chapter.data.chapterId,
-      title: chapter.data.title,
-      textLength: chapter.data.txtContent?.length ?? 0,
-      keyVersion: chapter.data.keyVersion
+    chapters: directory?.item_data_list?.length ?? null,
+    chapter: chapter ? {
+      chapterId: chapter.chapterId,
+      title: chapter.title,
+      textLength: chapter.txtContent?.length ?? 0,
+      keyVersion: chapter.keyVersion
     } : null,
-    chapterError: chapter?.data ? null : {
-      code: chapter?.code,
-      error: chapter?.error,
-      message: chapter?.message
-    }
+    chapterError: chapter ? null : '未取得正文'
   }, null, 2));
 } finally {
   await runtime.stop();

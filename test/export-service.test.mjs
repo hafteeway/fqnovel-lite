@@ -58,12 +58,16 @@ test('exports cached chapters as TXT and EPUB inside the configured export direc
     assert.match(epubFiles.get('EPUB/package.opf'), /properties="nav"/);
     assert.match(epubFiles.get('EPUB/package.opf'), /id="stylesheet"/);
     assert.match(epubFiles.get('EPUB/package.opf'), /idref="title-page"/);
+    assert.match(epubFiles.get('EPUB/package.opf'), /id="toc-page" href="text\/toc\.xhtml"/);
+    assert.match(epubFiles.get('EPUB/package.opf'), /<itemref idref="toc-page"\/>/);
     assert.match(epubFiles.get('EPUB/package.opf'), /properties="cover-image"/);
     assert.match(epubFiles.get('EPUB/package.opf'), /name="cover" content="cover-image"/);
     assert.match(epubFiles.get('EPUB/package.opf'), /idref="cover-page"/);
     assert.match(epubFiles.get('EPUB/nav.xhtml'), /epub:type="cover"/);
     assert.match(epubFiles.get('EPUB/nav.xhtml'), /epub:type="toc"/);
     assert.match(epubFiles.get('EPUB/nav.xhtml'), /href="text\/chapter-00001\.xhtml"/);
+    assert.match(epubFiles.get('EPUB/text/toc.xhtml'), /<h1>目录<\/h1>/);
+    assert.match(epubFiles.get('EPUB/text/toc.xhtml'), /href="chapter-00001\.xhtml">第1章<\/a>/);
     assert.match(epubFiles.get('EPUB/styles/book.css'), /text-indent:\s*2em/);
     assert.match(epubFiles.get('EPUB/text/title.xhtml'), /epub:type="titlepage"/);
     assert.match(epubFiles.get('EPUB/text/cover.xhtml'), /epub:type="cover"/);
@@ -73,8 +77,12 @@ test('exports cached chapters as TXT and EPUB inside the configured export direc
       coverBytes
     );
     assert.match(epubFiles.get('EPUB/text/chapter-00001.xhtml'), /epub:type="chapter"/);
+    assert.match(
+      epubFiles.get('EPUB/text/chapter-00001.xhtml'),
+      /<h1 epub:type="title">第1章<\/h1>/
+    );
     assert.match(epubFiles.get('EPUB/text/chapter-00001.xhtml'), /<p>第1章正文<\/p>/);
-    assert.doesNotMatch(epubFiles.get('EPUB/text/chapter-00001.xhtml'), /<h1>/);
+    assert.match(epubFiles.get('EPUB/styles/book.css'), /\.chapter h1/);
     assert.equal(path.dirname(txt.path), service.exportsDir);
     assert.equal(path.dirname(epub.path), service.exportsDir);
     assert.equal(path.basename(txt.path), '导出测试 - 作者.txt');

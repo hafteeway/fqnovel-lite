@@ -122,6 +122,10 @@ function createEpub(book, chapters, cover) {
       data: navigationXhtml(publication, chapterEntries, cover)
     },
     {
+      name: `${EPUB_ROOT}/text/toc.xhtml`,
+      data: tableOfContentsXhtml(publication, chapterEntries)
+    },
+    {
       name: `${EPUB_ROOT}/toc.ncx`,
       data: tocNcx(publication, identifier, chapterEntries)
     },
@@ -199,11 +203,13 @@ function contentOpf(book, identifier, chapters, cover) {
     <item id="nav" href="nav.xhtml" media-type="application/xhtml+xml" properties="nav"/>
     <item id="ncx" href="toc.ncx" media-type="application/x-dtbncx+xml"/>
     <item id="stylesheet" href="styles/book.css" media-type="text/css"/>
-    <item id="title-page" href="text/title.xhtml" media-type="application/xhtml+xml"/>${coverManifest}
+    <item id="title-page" href="text/title.xhtml" media-type="application/xhtml+xml"/>
+    <item id="toc-page" href="text/toc.xhtml" media-type="application/xhtml+xml"/>${coverManifest}
     ${manifest}
   </manifest>
   <spine toc="ncx" page-progression-direction="ltr">${coverSpine}
     <itemref idref="title-page"/>
+    <itemref idref="toc-page"/>
     ${spine}
   </spine>
 </package>`;
@@ -240,6 +246,32 @@ function navigationXhtml(book, chapters, cover) {
       ${coverLandmark}
       <li><a epub:type="titlepage" href="text/title.xhtml">书名页</a></li>
       <li><a epub:type="bodymatter" href="${firstChapter}">正文</a></li>
+    </ol>
+  </nav>
+</body>
+</html>`;
+}
+
+function tableOfContentsXhtml(book, chapters) {
+  const items = chapters.map((chapter) => {
+    const filename = chapter.filename.split('/').at(-1);
+    return `<li><a href="${escapeXml(filename)}">${escapeXml(chapter.title)}</a></li>`;
+  }).join('\n        ');
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:epub="http://www.idpf.org/2007/ops"
+      xml:lang="zh-CN" lang="zh-CN">
+<head>
+  <meta charset="UTF-8"/>
+  <title>目录 - ${escapeXml(book.bookName)}</title>
+  <link rel="stylesheet" type="text/css" href="../styles/book.css"/>
+</head>
+<body epub:type="frontmatter">
+  <nav epub:type="toc" id="toc" role="doc-toc" class="toc-page">
+    <h1>目录</h1>
+    <ol>
+        ${items}
     </ol>
   </nav>
 </body>
@@ -325,6 +357,7 @@ function chapterXhtml(chapter) {
 </head>
 <body epub:type="bodymatter">
   <section epub:type="chapter" class="chapter" aria-label="${escapeXml(chapter.title)}">
+    <h1 epub:type="title">${escapeXml(chapter.title)}</h1>
 ${paragraphs}
   </section>
 </body>
@@ -349,6 +382,17 @@ body {
 .chapter {
   margin: 0;
   padding: 0;
+}
+
+.chapter h1 {
+  margin: 0 0 1.5em;
+  padding: 0;
+  font-size: 1.4em;
+  font-weight: bold;
+  line-height: 1.5;
+  text-align: center;
+  text-indent: 0;
+  page-break-after: avoid;
 }
 
 .chapter p {
@@ -424,6 +468,15 @@ nav a {
   color: inherit;
   text-decoration: none;
 }
+
+.toc-page {
+  margin: 0;
+  padding: 0;
+}
+
+.toc-page li {
+  margin-bottom: 0.85em;
+}
 `;
 }
 
@@ -452,7 +505,8 @@ function assertEpubStructure(entries, chapters, cover) {
     EPUB_PACKAGE_PATH,
     `${EPUB_ROOT}/nav.xhtml`,
     EPUB_STYLESHEET_PATH,
-    `${EPUB_ROOT}/text/title.xhtml`
+    `${EPUB_ROOT}/text/title.xhtml`,
+    `${EPUB_ROOT}/text/toc.xhtml`
   ]) {
     if (!names.has(required)) throw new Error(`EPUB 缺少必要文件：${required}`);
   }

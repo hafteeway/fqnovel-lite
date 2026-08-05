@@ -189,18 +189,6 @@
   min-width: 142px;
 }
 
-.path-value {
-  overflow: hidden;
-  padding: 9px 11px;
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  color: inherit;
-  background: var(--surface-subtle);
-  font: 12px/20px Consolas, "SFMono-Regular", monospace;
-  overflow-wrap: anywhere;
-  white-space: normal;
-}
-
 .task-error {
   color: #c50f1f;
   font-size: 11px;

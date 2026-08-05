@@ -55,47 +55,18 @@ export interface DownloadTask {
 
 export interface AppSettings {
   exportDirectory?: string;
-  bookSourceEnabled?: boolean;
 }
 
 export interface RuntimeStatus {
-  refreshing?: boolean;
-  worker?: {
-    state?: 'starting' | 'ready' | 'stopped';
-  };
-  device?: {
-    generation?: number;
-    deviceBrand?: string;
-    deviceType?: string;
-    osVersion?: string;
-    osApi?: string;
-    resolution?: string;
-    dpi?: string;
-    updatedAt?: number | null;
-  };
-  server?: {
-    state?: 'running' | 'stopped';
-    baseUrl?: string;
-    localBaseUrl?: string;
-    lanBaseUrl?: string;
-    maintenance?: boolean;
-  };
   settings?: AppSettings;
   downloads?: {
     activeTasks?: number;
     tasks?: DownloadTask[];
   };
-  logs?: Array<{
-    at: string | number;
-    source?: string;
-    message: string;
-  }>;
 }
 
 export interface FQNovelBridge {
   getStatus(): Promise<RuntimeStatus>;
-  refreshUnidbg(): Promise<unknown>;
-  setBookSourceEnabled(enabled: boolean): Promise<AppSettings>;
   getCoverImage(url: string): Promise<string | null>;
   searchBooks(request: {
     query: string;

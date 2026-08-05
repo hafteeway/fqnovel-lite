@@ -49,6 +49,8 @@ test('downloads the complete book in batches and automatically exports the selec
     assert.deepEqual(batches.map((batch) => batch.length), [50, 1]);
     assert.match(await readFile(completed.outputPath, 'utf8'), /chapter-5 正文/);
     assert.match(await readFile(completed.outputPath, 'utf8'), /chapter-51/);
+    assert.deepEqual(manager.clearCompleted(), { deletedCount: 1, taskIds: [created.id] });
+    assert.deepEqual(manager.list(), []);
   } finally {
     await manager.stop();
     repository.close();
